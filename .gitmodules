@@ -1,3 +1,6 @@
 [submodule "UpgradableStackingTokenContract/lib/forge-std"]
 	path = UpgradableStackingTokenContract/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "UpgradableStackingTokenContract/lib/openzeppelin-contracts"]
+	path = UpgradableStackingTokenContract/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
