@@ -4,3 +4,6 @@
 [submodule "UpgradableStackingTokenContract/lib/openzeppelin-contracts"]
 	path = UpgradableStackingTokenContract/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "Chronos-Time-Vault/lib/forge-std"]
+	path = Chronos-Time-Vault/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
