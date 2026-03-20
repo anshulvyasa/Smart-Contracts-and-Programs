@@ -1,9 +1,10 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{AccountInfo, next_account_info},
-    entrypoint::{self, ProgramResult},
+    entrypoint::ProgramResult,
     msg,
     pubkey::Pubkey,
+    entrypoint
 };
 
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -16,6 +17,7 @@ enum CounterInstruction {
     Increment(u32),
     Decrement(u32),
 }
+
 
 pub fn process_instruction(
     _program_id: &Pubkey,
@@ -40,3 +42,5 @@ pub fn process_instruction(
 
     Ok(())
 }
+
+entrypoint!(process_instruction);
