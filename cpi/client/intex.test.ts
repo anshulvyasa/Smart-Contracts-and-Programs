@@ -101,3 +101,86 @@ test("Checking The Double Program", () => {
     expect(data2?.count).toBe(2);
 
 })
+
+
+test("Checking The Middle Program", () => {
+    // Step 1: Creating The SVM instance
+    const svm = new LiteSVM();
+
+    // Step 2: Deploying The Double Program
+    const double_program_address = PublicKey.unique();
+    svm.addProgramFromFile(double_program_address, path.join(__dirname, "../double-program/target/deploy/double_program.so"));
+
+    // Step 3: Deploying The Middle Contract
+    const middle_program_address = PublicKey.unique();
+    svm.addProgramFromFile(middle_program_address, path.join(__dirname, "../middle-program/target/deploy/middle_program.so"));
+
+
+    // Step 4: Creating Payer
+    const payer = new Keypair();
+    svm.airdrop(payer.publicKey, BigInt(LAMPORTS_PER_SOL * 100))
+    expect(svm.getBalance(payer.publicKey)).toBe(BigInt(100 * LAMPORTS_PER_SOL));
+
+    // Step 5: Defining The Data Account
+    const dataAccount = new Keypair();
+    const lamportsForDataAccount = svm.minimumBalanceForRentExemption(BigInt(4));
+    const ix1 = SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: dataAccount.publicKey,
+        lamports: Number(lamportsForDataAccount),
+        space: 4,
+        programId: double_program_address
+    })
+
+    const txn1 = new Transaction();
+    txn1.add(ix1);
+    txn1.recentBlockhash = svm.latestBlockhash();
+
+    txn1.sign(payer, dataAccount);
+    txn1.feePayer = payer.publicKey;
+    svm.sendTransaction(txn1);
+    expect(svm.getBalance(dataAccount.publicKey)).toBe(lamportsForDataAccount);
+
+    // Step 6: Calling Through Middle Contract For First Time
+    const ix2 = new TransactionInstruction({
+        programId: middle_program_address,
+        data: Buffer.from(""),
+        keys: [
+            { pubkey: dataAccount.publicKey, isSigner: false, isWritable: true },
+            { pubkey: double_program_address, isSigner: false, isWritable: false }
+        ]
+    })
+
+    const txn2 = new Transaction();
+    txn2.add(ix2);
+    txn2.recentBlockhash = svm.latestBlockhash()
+
+    txn2.sign(payer);
+    txn2.feePayer = payer.publicKey;
+    svm.sendTransaction(txn2);
+    const counter1 = deserializeBytes(svm.getAccount(dataAccount.publicKey)?.data);
+    expect(counter1?.count).toBe(1);
+
+    // Step 7: Expire Current BlockHash
+    svm.expireBlockhash();
+
+    // Step 7: all The Middle Contract Again
+    const ix3 = new TransactionInstruction({
+        programId: middle_program_address,
+        data: Buffer.from(""),
+        keys: [
+            { pubkey: dataAccount.publicKey, isSigner: false, isWritable: true },
+            { pubkey: double_program_address, isSigner: false, isWritable: false }
+        ]
+    })
+
+    const txn3 = new Transaction();
+    txn3.add(ix2);
+    txn3.recentBlockhash = svm.latestBlockhash()
+
+    txn3.sign(payer);
+    txn3.feePayer = payer.publicKey;
+    svm.sendTransaction(txn2);
+    const counter2 = deserializeBytes(svm.getAccount(dataAccount.publicKey)?.data);
+    expect(counter2?.count).toBe(1);
+})

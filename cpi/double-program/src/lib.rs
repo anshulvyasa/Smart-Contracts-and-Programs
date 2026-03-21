@@ -21,7 +21,7 @@ pub fn process_instruction(
     let mut iter = accounts.iter();
 
     let account = next_account_info(&mut iter)?;
-    let mut counter = Counter::try_from_slice(&account.data.borrow_mut())?;
+    let mut counter = Counter::try_from_slice(&account.data.borrow())?;
 
     if counter.count == 0 {
         counter.count = 1;
@@ -29,7 +29,7 @@ pub fn process_instruction(
         counter.count *= 2;
     }
 
-    counter.serialize(&mut *account.data.borrow_mut());
+    counter.serialize(&mut *account.data.borrow_mut())?;
 
     Ok(())
 }
